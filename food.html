@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>오늘 점심 뭐 먹지?</title>
+<style>
+  :root {
+    --bg:#f6f7fb;
+    --card:#ffffff;
+    --text:#17191f;
+    --muted:#727783;
+    --line:#e8eaf0;
+    --primary:#ff6b35;
+    --primary-dark:#e95724;
+    --chip:#f1f2f6;
+    --shadow:0 10px 30px rgba(18,24,40,.08);
+    --radius:20px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:linear-gradient(180deg,#fff8f3 0,#f6f7fb 240px);
+    color:var(--text);
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding:40px 20px 80px}
+  .hero{display:flex;justify-content:space-between;gap:24px;align-items:flex-end;margin-bottom:24px}
+  .hero h1{font-size:40px;line-height:1.1;margin:0 0 10px;font-weight:850;letter-spacing:-1.6px}
+  .hero p{margin:0;color:var(--muted);font-size:15px}
+  .badge{background:#fff;border:1px solid var(--line);padding:10px 14px;border-radius:999px;font-size:13px;color:#555;box-shadow:var(--shadow)}
+
+  .panel{
+    background:rgba(255,255,255,.92);
+    border:1px solid rgba(230,232,238,.95);
+    border-radius:24px;
+    box-shadow:var(--shadow);
+    padding:22px;
+    margin-bottom:24px;
+  }
+  .filters{display:grid;grid-template-columns:1.3fr 1fr auto;gap:18px;align-items:end}
+  .label{display:block;font-size:13px;font-weight:700;margin-bottom:9px;color:#555b66}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{
+    border:1px solid var(--line);
+    background:var(--chip);
+    color:#4f5560;
+    padding:9px 12px;
+    border-radius:999px;
+    cursor:pointer;
+    font-weight:700;
+    font-size:13px;
+    transition:.15s ease;
+  }
+  .chip:hover{transform:translateY(-1px)}
+  .chip.active{background:#17191f;color:#fff;border-color:#17191f}
+  select{
+    width:100%;border:1px solid var(--line);border-radius:12px;background:#fff;
+    padding:12px 14px;font-size:14px;outline:none;
+  }
+  .actions{display:flex;gap:10px}
+  button.primary, button.secondary{
+    border:0;border-radius:14px;padding:13px 18px;font-size:14px;font-weight:800;cursor:pointer;
+  }
+  button.primary{background:var(--primary);color:#fff;box-shadow:0 8px 18px rgba(255,107,53,.25)}
+  button.primary:hover{background:var(--primary-dark)}
+  button.secondary{background:#17191f;color:#fff}
+
+  .summary{display:flex;justify-content:space-between;align-items:center;margin:32px 0 14px}
+  .summary h2{font-size:24px;margin:0;letter-spacing:-.5px}
+  .summary .count{font-size:13px;color:var(--muted)}
+
+  .top3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px;box-shadow:0 6px 18px rgba(18,24,40,.05);position:relative;min-height:260px;
+  }
+  .rank{
+    width:34px;height:34px;border-radius:11px;background:#17191f;color:#fff;
+    display:grid;place-items:center;font-weight:850;font-size:14px;margin-bottom:14px;
+  }
+  .card h3{font-size:19px;margin:0 0 7px;letter-spacing:-.4px}
+  .meta{color:var(--muted);font-size:13px;margin-bottom:12px}
+  .tags{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+  .tag{font-size:12px;background:#fff4ee;color:#c64d1c;padding:6px 8px;border-radius:999px;font-weight:700}
+  .score{font-size:28px;font-weight:900;margin-top:14px}
+  .score small{font-size:12px;color:var(--muted);font-weight:600}
+  .note{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5}
+  .empty{padding:40px;text-align:center;color:var(--muted);background:#fff;border:1px dashed var(--line);border-radius:18px}
+
+  .toolbar{display:flex;gap:10px;align-items:center}
+  .search{flex:1;position:relative}
+  .search input{
+    width:100%;padding:13px 14px 13px 40px;border:1px solid var(--line);border-radius:14px;font-size:14px;outline:none;background:#fff;
+  }
+  .search span{position:absolute;left:14px;top:12px}
+  .list{display:grid;gap:10px}
+  .row{
+    display:grid;grid-template-columns:2fr 1.1fr 1fr .7fr .7fr;gap:12px;align-items:center;
+    background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px 16px;
+  }
+  .row strong{font-size:14px}
+  .row span{font-size:13px;color:var(--muted)}
+  .rating{color:#f39c12 !important;font-weight:800}
+  .pill{justify-self:start;background:#f3f4f7;padding:6px 9px;border-radius:999px;font-weight:700}
+  footer{margin-top:28px;color:#8a8f99;font-size:12px;line-height:1.6}
+  @media (max-width:900px){
+    .filters{grid-template-columns:1fr}
+    .top3{grid-template-columns:1fr}
+    .row{grid-template-columns:1fr 1fr}
+    .hero{align-items:flex-start;flex-direction:column}
+  }
+  @media (max-width:560px){
+    .hero h1{font-size:32px}
+    .actions{width:100%}
+    .actions button{flex:1}
+    .row{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <div>
+      <h1>오늘 점심 뭐 먹지? 🍽️</h1>
+      <p>스페이스쉐어 강남센터 주변 점심 후보 30곳에서 골라드립니다.</p>
+    </div>
+    <div class="badge">📍 서울 서초구 강남대로 499 · 기준 반경 500m</div>
+  </section>
+
+  <section class="panel">
+    <div class="filters">
+      <div>
+        <span class="label">음식 종류</span>
+        <div class="chips" id="categoryChips"></div>
+      </div>
+      <div>
+        <span class="label">예산</span>
+        <select id="budget">
+          <option value="all">가격 상관없음</option>
+          <option value="under1">1만원 이하</option>
+          <option value="1to2">1~2만원</option>
+          <option value="over2">2만원 이상</option>
+        </select>
+      </div>
+      <div class="actions">
+        <button class="primary" id="recommendBtn">점심 추천받기</button>
+        <button class="secondary" id="shuffleBtn">🎲 다른 추천</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="summary">
+    <h2>오늘의 추천 TOP 3</h2>
+    <div class="count" id="resultCount"></div>
+  </div>
+  <section class="top3" id="top3"></section>
+
+  <div class="summary">
+    <h2>전체 식당</h2>
+    <div class="count" id="allCount"></div>
+  </div>
+
+  <section class="panel">
+    <div class="toolbar">
+      <div class="search">
+        <span>🔎</span>
+        <input id="searchInput" type="search" placeholder="식당명이나 음식 종류 검색" />
+      </div>
+    </div>
+  </section>
+
+  <section class="list" id="restaurantList"></section>
+
+  <footer>
+    본 페이지는 초기 프로토타입입니다. 현재 데이터셋의 거리값은 미입력 상태이므로 실제 500m 직선거리 검증 및 도보시간 계산은 포함하지 않았습니다.
+    평점·리뷰 수·가격 정보는 데이터셋에 있는 값만 사용하며, 비어 있는 값은 임의로 생성하지 않습니다.
+  </footer>
+</div>
+
+<script>
+const restaurants = [{"id": 1, "name": "영동교집 강남직영점", "category": "한식/고기", "address": "서울특별시 서초구 강남대로 499 동양빌딩 2층", "price_range": "20000-40000", "rating": 4.9, "review_count": 646, "lunch_open": true, "distance_m": null}, {"id": 2, "name": "서브웨이 신논현점", "category": "샌드위치/패스트푸드", "address": "서울특별시 서초구 강남대로 499 1층", "price_range": "1-10000", "rating": 4.2, "review_count": 271, "lunch_open": true, "distance_m": null}, {"id": 3, "name": "강남 키친콤마", "category": "한식", "address": "서울특별시 서초구 강남대로 495 1층", "price_range": "10000-20000", "rating": 5.0, "review_count": 30, "lunch_open": true, "distance_m": null}, {"id": 4, "name": "리나스 신논현점", "category": "샌드위치", "address": "서울특별시 서초구 강남대로 503", "price_range": null, "rating": 4.1, "review_count": 7, "lunch_open": true, "distance_m": null}, {"id": 5, "name": "더바른", "category": "한식/소고기", "address": "서울특별시 강남구 강남대로 482 1층", "price_range": "20000-70000", "rating": 4.8, "review_count": 419, "lunch_open": true, "distance_m": null}, {"id": 6, "name": "쿄코코 신논현점", "category": "일식", "address": "서울특별시 강남구 강남대로106길 23 지하1층", "price_range": "10000-20000", "rating": 4.8, "review_count": 412, "lunch_open": true, "distance_m": null}, {"id": 7, "name": "꾸아 강남역CGV점", "category": "베트남음식", "address": "서울특별시 강남구 강남대로102길 11", "price_range": "10000-20000", "rating": 4.9, "review_count": 790, "lunch_open": true, "distance_m": null}, {"id": 8, "name": "라홍방마라탕 강남직영점", "category": "중식/마라탕", "address": "서울특별시 강남구 강남대로102길 20", "price_range": "10000-20000", "rating": 5.0, "review_count": 43, "lunch_open": true, "distance_m": null}, {"id": 9, "name": "백소정 강남직영점", "category": "일식", "address": "서울특별시 강남구 봉은사로2길 10 1층", "price_range": null, "rating": 4.3, "review_count": 86, "lunch_open": true, "distance_m": null}, {"id": 10, "name": "유라멘 강남신논현역본점", "category": "일식/라멘", "address": "서울특별시 강남구 봉은사로4길 32", "price_range": null, "rating": 4.8, "review_count": 27, "lunch_open": true, "distance_m": null}, {"id": 11, "name": "스아게 강남점", "category": "일식/카레", "address": "서울특별시 강남구 봉은사로4길 29", "price_range": "10000-20000", "rating": 4.2, "review_count": 36, "lunch_open": true, "distance_m": null}, {"id": 12, "name": "미미옥 강남 신논현점", "category": "샤브샤브", "address": "서울특별시 강남구 봉은사로4길 24", "price_range": "20000-60000", "rating": 4.9, "review_count": 39, "lunch_open": true, "distance_m": null}, {"id": 13, "name": "위트앤미트 강남점", "category": "샌드위치", "address": "서울특별시 강남구 강남대로110길 32", "price_range": null, "rating": 4.7, "review_count": 561, "lunch_open": true, "distance_m": null}, {"id": 14, "name": "김밥속으로", "category": "한식/분식", "address": "서울특별시 강남구 봉은사로2길 17", "price_range": "1-10000", "rating": 3.8, "review_count": 104, "lunch_open": true, "distance_m": null}, {"id": 15, "name": "버거킹 신논현역점", "category": "햄버거/패스트푸드", "address": "서울특별시 강남구 봉은사로 105", "price_range": "1-10000", "rating": 4.2, "review_count": 518, "lunch_open": true, "distance_m": null}, {"id": 16, "name": "감탄성신초밥", "category": "일식/초밥", "address": "서울특별시 강남구 강남대로106길 14 1층", "price_range": "점심 2만원대", "rating": null, "review_count": null, "lunch_open": true, "distance_m": null}, {"id": 17, "name": "누리초밥참치", "category": "일식/초밥", "address": "서울특별시 강남구 강남대로116길 8", "price_range": null, "rating": 4.5, "review_count": 59, "lunch_open": true, "distance_m": null}, {"id": 18, "name": "키라쿠슈 논현점", "category": "일식", "address": "서울특별시 서초구 강남대로85길 17", "price_range": null, "rating": 5.0, "review_count": 4, "lunch_open": true, "distance_m": null}, {"id": 19, "name": "산산옥 신논현점", "category": "한식", "address": "서울특별시 서초구 사평대로55길 18", "price_range": "10000-20000", "rating": 4.8, "review_count": 18, "lunch_open": true, "distance_m": null}, {"id": 20, "name": "아빠곰수제돈까스 신논현역점", "category": "일식/돈까스", "address": "서울특별시 서초구 사평대로56길 7 112호", "price_range": null, "rating": 4.2, "review_count": 73, "lunch_open": true, "distance_m": null}, {"id": 21, "name": "사보텐 신논현", "category": "일식/돈카츠", "address": "서울특별시 서초구 서초동 1303-16 아이파크에비뉴 1층", "price_range": "10000-20000", "rating": 3.9, "review_count": 139, "lunch_open": true, "distance_m": null}, {"id": 22, "name": "싸다김밥 신논현역점", "category": "분식/김밥", "address": "서울특별시 서초구 사평대로56길 14", "price_range": "1-10000", "rating": 4.1, "review_count": 30, "lunch_open": true, "distance_m": null}, {"id": 23, "name": "오도로키", "category": "일식/우동", "address": "서울특별시 서초구 사평대로55길 24", "price_range": null, "rating": 4.7, "review_count": 89, "lunch_open": true, "distance_m": null}, {"id": 24, "name": "진미식당", "category": "한식", "address": "서울특별시 서초구 강남대로83길 18", "price_range": null, "rating": 4.4, "review_count": 490, "lunch_open": true, "distance_m": null}, {"id": 25, "name": "언구비육회", "category": "한식/육회", "address": "서울특별시 서초구 강남대로83길 33", "price_range": null, "rating": 4.7, "review_count": 26, "lunch_open": true, "distance_m": null}, {"id": 26, "name": "경성버거", "category": "햄버거", "address": "서울특별시 서초구 강남대로85길 21-8 1층", "price_range": null, "rating": 4.6, "review_count": 19, "lunch_open": true, "distance_m": null}, {"id": 27, "name": "나순대국 신논현역점", "category": "한식/순대국", "address": "서울특별시 서초구 사평대로 349", "price_range": "1-10000", "rating": 3.9, "review_count": 9, "lunch_open": true, "distance_m": null}, {"id": 28, "name": "알로하포케 신논현점", "category": "포케/샐러드", "address": "서울특별시 서초구 반포1동 738-45", "price_range": "10000-20000", "rating": 4.1, "review_count": 118, "lunch_open": true, "distance_m": null}, {"id": 29, "name": "TOYOCURRY @ Gangnam 토요커리 논현점", "category": "일식/카레", "address": "서울특별시 서초구 사평대로53길 82 1층", "price_range": "10000-20000", "rating": 4.9, "review_count": 41, "lunch_open": true, "distance_m": null}, {"id": 30, "name": "도셰프 논현", "category": "이탈리안", "address": "서울특별시 서초구 반포동 707-8", "price_range": null, "rating": 4.2, "review_count": 590, "lunch_open": true, "distance_m": null}];
+
+const categoryMap = [
+  ["전체","all"],
+  ["한식","한식"],
+  ["일식","일식"],
+  ["중식","중식"],
+  ["아시안","아시안"],
+  ["양식","양식"],
+  ["분식","분식"],
+  ["샌드위치·버거","패스트"],
+  ["샐러드","샐러드"]
+];
+
+let selectedCategory = "all";
+let currentSeed = 0;
+
+function normalizeCategory(r) {
+  const c = r.category || "";
+  if (c.includes("한식") || c.includes("순대국") || c.includes("육회") || c.includes("소고기")) return "한식";
+  if (c.includes("일식") || c.includes("초밥") || c.includes("라멘") || c.includes("돈까스") || c.includes("돈카츠") || c.includes("우동") || c.includes("카레")) return "일식";
+  if (c.includes("중식") || c.includes("마라")) return "중식";
+  if (c.includes("베트남") || c.includes("샤브")) return "아시안";
+  if (c.includes("이탈리안")) return "양식";
+  if (c.includes("분식") || c.includes("김밥")) return "분식";
+  if (c.includes("샌드위치") || c.includes("햄버거") || c.includes("패스트푸드")) return "패스트";
+  if (c.includes("샐러드") || c.includes("포케")) return "샐러드";
+  return "기타";
+}
+
+function priceBucket(price) {
+  if (!price) return "unknown";
+  const p = String(price);
+  if (p.includes("1-10000")) return "under1";
+  if (p.includes("10000-20000")) return "1to2";
+  if (p.includes("20000-") || p.includes("점심 2만원대")) return "over2";
+  return "unknown";
+}
+
+function priceLabel(price) {
+  if (!price) return "가격 정보 없음";
+  if (price === "1-10000") return "1만원 이하";
+  if (price === "10000-20000") return "1~2만원";
+  if (price === "20000-40000") return "2~4만원";
+  if (price === "20000-60000") return "2~6만원";
+  if (price === "20000-70000") return "2~7만원";
+  return price;
+}
+
+function score(r) {
+  const rating = Number(r.rating || 0);
+  const reviews = Number(r.review_count || 0);
+  const reviewScore = reviews > 0 ? Math.min(Math.log10(reviews + 1) / 3, 1) * 5 : 0;
+  return rating * 0.6 + reviewScore * 0.4;
+}
+
+function filtered() {
+  const budget = document.getElementById("budget").value;
+  return restaurants.filter(r => {
+    const catOk = selectedCategory === "all" || normalizeCategory(r) === selectedCategory;
+    const pb = priceBucket(r.price_range);
+    const budgetOk = budget === "all" || pb === budget || pb === "unknown";
+    return catOk && budgetOk;
+  });
+}
+
+function seededJitter(id) {
+  const x = Math.sin((id + 1) * 999 + currentSeed * 37) * 10000;
+  return x - Math.floor(x);
+}
+
+function recommend() {
+  const pool = filtered();
+  document.getElementById("resultCount").textContent = `조건에 맞는 식당 ${pool.length}곳`;
+  if (!pool.length) {
+    document.getElementById("top3").innerHTML = `<div class="empty">조건에 맞는 식당이 없습니다.</div>`;
+    return;
+  }
+  const ranked = [...pool].sort((a,b) => {
+    const sa = score(a) + seededJitter(a.id) * 0.18;
+    const sb = score(b) + seededJitter(b.id) * 0.18;
+    return sb - sa;
+  }).slice(0,3);
+
+  document.getElementById("top3").innerHTML = ranked.map((r,i) => {
+    const reasons = [];
+    if ((r.rating || 0) >= 4.7) reasons.push("높은 평점");
+    if ((r.review_count || 0) >= 300) reasons.push("리뷰 많음");
+    if (r.price_range === "1-10000") reasons.push("가성비");
+    if (reasons.length === 0) reasons.push("점심 후보");
+    return `
+      <article class="card">
+        <div class="rank">${i+1}</div>
+        <h3>${escapeHtml(r.name)}</h3>
+        <div class="meta">${escapeHtml(r.category)} · ${priceLabel(r.price_range)}</div>
+        <div class="tags">${reasons.map(x => `<span class="tag">${x}</span>`).join("")}</div>
+        <div class="score">${r.rating ?? "-"} <small>/ 5 · 리뷰 ${r.review_count ?? "-"}개</small></div>
+        <div class="note">📍 ${escapeHtml(r.address)}<br>거리: ${r.distance_m == null ? "미확인" : r.distance_m + "m"}</div>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderList() {
+  const q = document.getElementById("searchInput").value.trim().toLowerCase();
+  const list = restaurants.filter(r => {
+    const hay = `${r.name} ${r.category} ${r.address}`.toLowerCase();
+    return hay.includes(q);
+  });
+  document.getElementById("allCount").textContent = `${list.length}곳`;
+  document.getElementById("restaurantList").innerHTML = list.map(r => `
+    <div class="row">
+      <strong>${escapeHtml(r.name)}</strong>
+      <span class="pill">${escapeHtml(r.category)}</span>
+      <span>${priceLabel(r.price_range)}</span>
+      <span class="rating">★ ${r.rating ?? "-"}</span>
+      <span>리뷰 ${r.review_count ?? "-"}</span>
+    </div>
+  `).join("");
+}
+
+function escapeHtml(str) {
+  return String(str ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+function buildChips() {
+  const box = document.getElementById("categoryChips");
+  box.innerHTML = categoryMap.map(([label,value]) => `
+    <button class="chip ${value === "all" ? "active" : ""}" data-value="${value}">${label}</button>
+  `).join("");
+  box.querySelectorAll(".chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      box.querySelectorAll(".chip").forEach(x => x.classList.remove("active"));
+      btn.classList.add("active");
+      selectedCategory = btn.dataset.value;
+      currentSeed = 0;
+      recommend();
+    });
+  });
+}
+
+document.getElementById("recommendBtn").addEventListener("click", () => {
+  currentSeed = 0;
+  recommend();
+});
+document.getElementById("shuffleBtn").addEventListener("click", () => {
+  currentSeed++;
+  recommend();
+});
+document.getElementById("budget").addEventListener("change", () => {
+  currentSeed = 0;
+  recommend();
+});
+document.getElementById("searchInput").addEventListener("input", renderList);
+
+buildChips();
+recommend();
+renderList();
+</script>
+</body>
+</html>
