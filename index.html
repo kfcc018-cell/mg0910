@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="MG 맞춤형 대출 상환 계산기" />
+  <title>MG 맞춤형 대출 상환 계산기</title>
+  <style>
+    :root {
+      --mg-blue: #005bac;
+      --mg-deep: #003b78;
+      --mg-sky: #16a7d8;
+      --mg-pale: #eef7fc;
+      --line: #d9e5ee;
+      --text: #17202a;
+      --muted: #687684;
+      --white: #ffffff;
+      --danger: #c93737;
+      --success: #087c61;
+      --shadow: 0 14px 40px rgba(0, 59, 120, 0.10);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Pretendard, "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", Arial, sans-serif;
+      color: var(--text);
+      background: linear-gradient(180deg, #f6fbff 0%, #eef4f8 100%);
+      line-height: 1.5;
+    }
+
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+
+    .app-shell { max-width: 1460px; margin: 0 auto; padding: 26px; }
+    .hero {
+      background: linear-gradient(135deg, #ffffff 0%, #eff9ff 55%, #e6f5fb 100%);
+      border: 1px solid #d7ebf7;
+      box-shadow: var(--shadow);
+      border-radius: 26px;
+      padding: 26px 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 22px;
+    }
+
+    .brand-wrap { display: flex; align-items: center; gap: 22px; min-width: 0; }
+    .hero h1 { margin: 0 0 6px; font-size: clamp(1.55rem, 2.2vw, 2.25rem); color: var(--mg-deep); }
+    .hero p { margin: 0; color: var(--muted); }
+    .hero-badge {
+      flex: 0 0 auto;
+      padding: 10px 14px;
+      border-radius: 999px;
+      color: var(--mg-deep);
+      background: rgba(255,255,255,.78);
+      border: 1px solid #cce7f6;
+      font-weight: 800;
+      font-size: .88rem;
+    }
+
+    .layout { display: grid; grid-template-columns: minmax(330px, 430px) minmax(0, 1fr); gap: 22px; align-items: start; }
+    .panel {
+      background: var(--white);
+      border: 1px solid #e3edf3;
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(0, 40, 80, .06);
+    }
+    .inputs { padding: 22px; position: sticky; top: 16px; }
+    .results { padding: 22px; min-width: 0; }
+
+    .section + .section { margin-top: 24px; padding-top: 22px; border-top: 1px solid #edf1f4; }
+    .section-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    .section-title h2, .section-title h3 { margin: 0; color: var(--mg-deep); font-size: 1.08rem; }
+    .section-title span { font-size: .78rem; color: var(--muted); }
+
+    .field { margin-bottom: 15px; }
+    .field:last-child { margin-bottom: 0; }
+    label { display: block; font-weight: 800; font-size: .91rem; margin-bottom: 7px; color: #30404f; }
+    .hint { margin-top: 6px; color: var(--muted); font-size: .78rem; }
+    .control, select {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid #cbdbe6;
+      border-radius: 11px;
+      padding: 10px 12px;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+      transition: .18s ease;
+    }
+    .control:focus, select:focus { border-color: var(--mg-blue); box-shadow: 0 0 0 3px rgba(0,91,172,.11); }
+    .control-group { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+    .suffix {
+      min-width: 72px;
+      display: grid;
+      place-items: center;
+      border: 1px solid #dbe7ee;
+      background: #f6f9fb;
+      border-radius: 11px;
+      color: #52616e;
+      font-weight: 800;
+    }
+
+    .quick-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+    .quick-btn, .small-btn {
+      border: 1px solid #bcd7e9;
+      background: #f7fcff;
+      color: var(--mg-blue);
+      font-weight: 800;
+      padding: 9px 8px;
+      border-radius: 10px;
+    }
+    .quick-btn:hover, .small-btn:hover { background: #eaf7fd; border-color: #7ebde2; }
+
+    input[type="range"] { width: 100%; accent-color: var(--mg-blue); margin-top: 9px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
+    .segmented { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .segmented label { margin: 0; }
+    .segmented input { position: absolute; opacity: 0; pointer-events: none; }
+    .segmented span {
+      display: block;
+      text-align: center;
+      border: 1px solid #cbdbe6;
+      padding: 10px 8px;
+      border-radius: 10px;
+      font-weight: 800;
+      color: #51606d;
+      background: #fff;
+    }
+    .segmented input:checked + span { color: #fff; background: var(--mg-blue); border-color: var(--mg-blue); box-shadow: 0 5px 15px rgba(0,91,172,.17); }
+
+    .method-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .method-card { position: relative; }
+    .method-card input { position: absolute; opacity: 0; }
+    .method-card span {
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 9px;
+      border: 1px solid #d4e1e9;
+      border-radius: 12px;
+      color: #475766;
+      background: #fff;
+      font-size: .84rem;
+      font-weight: 800;
+    }
+    .method-card input:checked + span { background: #edf8fd; border-color: var(--mg-blue); color: var(--mg-deep); box-shadow: inset 0 0 0 1px var(--mg-blue); }
+
+    .primary-btn {
+      width: 100%;
+      border: none;
+      border-radius: 13px;
+      background: linear-gradient(135deg, var(--mg-blue), #0879c8);
+      color: #fff;
+      padding: 14px 18px;
+      font-weight: 900;
+      font-size: 1rem;
+      box-shadow: 0 9px 22px rgba(0,91,172,.22);
+    }
+    .primary-btn:hover { filter: brightness(.97); transform: translateY(-1px); }
+    .secondary-btn {
+      border: 1px solid #9fcce6;
+      background: #f2faff;
+      color: var(--mg-deep);
+      border-radius: 11px;
+      padding: 10px 14px;
+      font-weight: 900;
+    }
+
+    .notice {
+      border-radius: 12px;
+      background: #f7fafc;
+      border: 1px solid #e2e9ee;
+      padding: 11px 12px;
+      color: #64717c;
+      font-size: .77rem;
+      margin-top: 15px;
+    }
+
+    .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; }
+    .summary-card {
+      border: 1px solid #dceaf3;
+      border-radius: 15px;
+      padding: 17px;
+      background: linear-gradient(180deg, #fff 0%, #f7fbfe 100%);
+      min-width: 0;
+    }
+    .summary-card.accent { background: linear-gradient(135deg, #005bac 0%, #0b73ba 100%); border-color: transparent; color: white; }
+    .summary-card .kicker { font-size: .76rem; color: #70808c; margin-bottom: 7px; font-weight: 700; }
+    .summary-card.accent .kicker { color: rgba(255,255,255,.78); }
+    .summary-card .value { font-size: clamp(1.18rem, 1.6vw, 1.55rem); font-weight: 900; letter-spacing: -.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .summary-card .sub { margin-top: 7px; color: #75838e; font-size: .74rem; }
+    .summary-card.accent .sub { color: rgba(255,255,255,.74); }
+
+    .rate-strip {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1px;
+      border: 1px solid #e0e9ef;
+      background: #e0e9ef;
+      border-radius: 13px;
+      overflow: hidden;
+      margin-top: 14px;
+    }
+    .rate-item { background: #fff; padding: 11px 12px; min-width: 0; }
+    .rate-item b { display: block; color: var(--mg-deep); font-size: .93rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rate-item span { display: block; color: var(--muted); font-size: .72rem; margin-bottom: 3px; }
+
+
+
+    .visual-stats {
+      margin-top: 18px;
+      border: 1px solid #dce7ef;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #fbfdff 0%, #f7fafc 100%);
+      padding: 18px;
+    }
+    .visual-stats-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .visual-stats-head h3 { margin: 0; color: var(--mg-deep); font-size: 1rem; }
+    .visual-stats-head span { color: var(--muted); font-size: .76rem; }
+    .visual-stats-grid {
+      display: grid;
+      grid-template-columns: 190px minmax(0, 1fr);
+      gap: 22px;
+      align-items: center;
+    }
+    .donut-wrap {
+      display: grid;
+      place-items: center;
+      min-height: 168px;
+    }
+    .donut-chart {
+      --principal-angle: 0deg;
+      --donut-font: 1.05rem;
+      width: 156px;
+      height: 156px;
+      border-radius: 50%;
+      background: conic-gradient(#064a97 0deg var(--principal-angle), #f7a40a var(--principal-angle) 360deg);
+      position: relative;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.02);
+    }
+    .donut-chart::after {
+      content: '';
+      position: absolute;
+      inset: 18px;
+      border-radius: 50%;
+      background: #fbfdff;
+      box-shadow: 0 0 0 1px #e5edf3;
+    }
+    .donut-center {
+      position: absolute;
+      inset: 22px;
+      z-index: 1;
+      display: grid;
+      place-content: center;
+      text-align: center;
+      pointer-events: none;
+      min-width: 0;
+    }
+    .donut-center b {
+      display: block;
+      max-width: 110px;
+      margin: 0 auto;
+      color: var(--mg-deep);
+      font-size: var(--donut-font);
+      line-height: 1.08;
+      letter-spacing: -.045em;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+    .donut-center span { margin-top: 4px; color: var(--muted); font-size: .69rem; font-weight: 700; }
+    .stat-lines { min-width: 0; }
+    .stat-line {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 9px;
+      align-items: center;
+      min-height: 39px;
+      border-bottom: 1px solid #dce5ec;
+    }
+    .stat-line:last-child { border-bottom: 0; }
+    .stat-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .stat-dot.principal { background: #064a97; }
+    .stat-dot.interest { background: #f7a40a; }
+    .stat-label { color: #53677a; font-size: .85rem; font-weight: 700; }
+    .stat-value { color: #263546; font-size: .9rem; font-weight: 900; white-space: nowrap; }
+    .stat-value.interest { color: #df7900; }
+    .stat-line.avg { grid-template-columns: 1fr auto; padding-top: 5px; }
+    .stat-line.avg .stat-label { color: #7b8896; font-weight: 600; }
+    .visual-bars {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .visual-mini-card {
+      border: 1px solid #e0e8ee;
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .visual-mini-card span { display: block; color: var(--muted); font-size: .7rem; margin-bottom: 5px; }
+    .visual-mini-card b { display: block; color: var(--mg-deep); font-size: .9rem; }
+    .mini-track { margin-top: 9px; height: 6px; border-radius: 999px; overflow: hidden; background: #e8eef3; }
+    .mini-track i { display: block; height: 100%; width: 0%; border-radius: inherit; background: #0b67b3; transition: width .35s ease; }
+    .mini-track.interest i { background: #f7a40a; }
+
+    .prepay-box {
+      margin-top: 18px;
+      background: linear-gradient(135deg, #f6fbff, #eef9fb);
+      border: 1px solid #cfe7f2;
+      border-radius: 15px;
+      padding: 17px;
+    }
+    .prepay-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .prepay-head h3 { margin: 0; color: var(--mg-deep); font-size: 1rem; }
+    .prepay-grid { display: grid; grid-template-columns: 1.1fr .9fr .9fr 1fr auto; gap: 10px; align-items: end; }
+    .prepay-grid .field { margin-bottom: 0; }
+    .fee-result { margin-top: 12px; display: none; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+    .fee-result.show { display: grid; }
+    .fee-mini { background: white; border: 1px solid #dce8ef; padding: 11px 12px; border-radius: 11px; }
+    .fee-mini span { display: block; font-size: .72rem; color: var(--muted); }
+    .fee-mini b { color: var(--mg-deep); font-size: .95rem; }
+
+    .table-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 22px 0 10px; }
+    .table-toolbar h3 { margin: 0; color: var(--mg-deep); font-size: 1rem; }
+    .table-toolbar .meta { color: var(--muted); font-size: .78rem; }
+    .table-wrap { width: 100%; overflow: auto; border: 1px solid #dbe6ed; border-radius: 14px; max-height: 620px; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 720px; }
+    thead th {
+      position: sticky; top: 0; z-index: 2;
+      background: #edf6fb;
+      color: var(--mg-deep);
+      padding: 12px 14px;
+      font-size: .82rem;
+      border-bottom: 1px solid #cfe0eb;
+      text-align: right;
+    }
+    thead th:first-child, tbody td:first-child { text-align: center; }
+    tbody td { padding: 11px 14px; border-bottom: 1px solid #edf1f4; font-size: .84rem; text-align: right; white-space: nowrap; }
+    tbody tr:hover td { background: #fafcfd; }
+    tbody tr.prepay-marker td { background: #fff9ea; }
+    tbody tr:last-child td { border-bottom: 0; }
+    .balance { color: var(--mg-deep); font-weight: 800; }
+    .tag { display: inline-block; margin-left: 6px; font-size: .66rem; padding: 2px 6px; border-radius: 999px; background: #fff0bd; color: #7b5900; vertical-align: middle; }
+
+    .empty-state { padding: 56px 20px; text-align: center; color: var(--muted); border: 1px dashed #cadde8; border-radius: 15px; }
+    .empty-state strong { display: block; color: var(--mg-deep); font-size: 1.1rem; margin-bottom: 5px; }
+    .hidden { display: none !important; }
+
+    .error {
+      display: none;
+      margin-bottom: 14px;
+      background: #fff3f3;
+      border: 1px solid #f2c5c5;
+      color: #a52d2d;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: .82rem;
+      font-weight: 700;
+    }
+    .error.show { display: block; }
+
+    footer { text-align: center; color: #7b8790; font-size: .73rem; padding: 22px 8px 8px; }
+
+    @media (max-width: 1120px) {
+      .layout { grid-template-columns: 1fr; }
+      .inputs { position: static; }
+      .summary-grid { grid-template-columns: repeat(2, 1fr); }
+      .prepay-grid { grid-template-columns: repeat(2, 1fr); }
+      .prepay-grid button { grid-column: 1 / -1; }
+    }
+    @media (max-width: 720px) {
+      .app-shell { padding: 12px; }
+      .hero { padding: 18px; border-radius: 18px; align-items: flex-start; }
+      .brand-wrap { align-items: flex-start; flex-direction: column; gap: 12px; }
+      .hero-badge { display: none; }
+      .inputs, .results { padding: 16px; }
+      .summary-grid, .fee-result.show, .two-col, .three-col { grid-template-columns: 1fr; }
+      .visual-stats-grid { grid-template-columns: 1fr; gap: 8px; }
+      .visual-bars { grid-template-columns: 1fr; }
+      .donut-wrap { min-height: 166px; }
+      .donut-chart { width: 148px; height: 148px; }
+      .donut-center { inset: 21px; }
+      .donut-center b { max-width: 104px; }
+      .rate-strip { grid-template-columns: 1fr 1fr; }
+      .rate-item:last-child { grid-column: 1 / -1; }
+      .method-grid { grid-template-columns: 1fr; }
+      .prepay-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="hero">
+      <div class="brand-wrap">
+        <div>
+          <h1>MG 맞춤형 대출 상환 계산기</h1>
+          <p>상환 방식·거치기간·금리조건을 반영해 월별 상환 계획을 한눈에 확인하세요.</p>
+        </div>
+      </div>
+      <div class="hero-badge">창구 상담 · 웹 공용</div>
+    </header>
+
+    <div class="layout">
+      <aside class="panel inputs">
+        <div id="errorBox" class="error"></div>
+
+        <section class="section">
+          <div class="section-title"><h2>대출 조건</h2><span>필수 입력</span></div>
+
+          <div class="field">
+            <label for="amount">대출 금액</label>
+            <div class="control-group">
+              <input id="amount" class="control" type="number" min="1" step="1" value="3000" inputmode="numeric" />
+              <div class="suffix">만원</div>
+            </div>
+            <input id="amountRange" type="range" min="100" max="50000" step="100" value="3000" aria-label="대출 금액 슬라이더" />
+            <div class="quick-buttons">
+              <button type="button" class="quick-btn" data-amount="100">100만원</button>
+              <button type="button" class="quick-btn" data-amount="500">500만원</button>
+              <button type="button" class="quick-btn" data-amount="1000">1,000만원</button>
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div class="field">
+              <label for="term">대출 기간</label>
+              <input id="term" class="control" type="number" min="1" step="1" value="36" />
+            </div>
+            <div class="field">
+              <label>기간 단위</label>
+              <div class="segmented">
+                <label><input type="radio" name="termUnit" value="month" checked><span>개월</span></label>
+                <label><input type="radio" name="termUnit" value="year"><span>년</span></label>
+              </div>
+            </div>
+          </div>
+          <input id="termRange" type="range" min="1" max="360" step="1" value="36" aria-label="대출 기간 슬라이더" />
+
+          <div class="field" style="margin-top:14px;">
+            <label for="grace">거치 기간</label>
+            <div class="control-group">
+              <input id="grace" class="control" type="number" min="0" step="1" value="0" />
+              <div class="suffix">개월</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-title"><h3>금리 정보</h3><span>연 이율 기준</span></div>
+          <div class="three-col">
+            <div class="field">
+              <label for="baseRate">기준금리</label>
+              <input id="baseRate" class="control" type="number" min="0" max="50" step="0.01" value="3.20" />
+            </div>
+            <div class="field">
+              <label for="spreadRate">가산금리</label>
+              <input id="spreadRate" class="control" type="number" min="-20" max="50" step="0.01" value="1.30" />
+            </div>
+            <div class="field">
+              <label for="appliedRate">적용금리</label>
+              <input id="appliedRate" class="control" type="number" min="0" max="50" step="0.01" value="4.50" />
+            </div>
+          </div>
+          <button type="button" id="applyRateSum" class="small-btn" style="width:100%; margin-bottom:10px;">기준금리 + 가산금리를 적용금리에 반영</button>
+          <div class="two-col">
+            <div class="field">
+              <label for="rateCycle">금리주기</label>
+              <select id="rateCycle">
+                <option value="3개월">3개월</option>
+                <option value="6개월" selected>6개월</option>
+                <option value="12개월">12개월</option>
+                <option value="고정">고정</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="rateType">금리종류</label>
+              <select id="rateType">
+                <option value="변동금리" selected>변동금리</option>
+                <option value="고정금리">고정금리</option>
+              </select>
+            </div>
+          </div>
+          <div class="hint">변동금리는 미래 금리 변동을 예측하지 않고 현재 입력한 적용금리가 유지된다는 가정으로 계산합니다.</div>
+        </section>
+
+        <section class="section">
+          <div class="section-title"><h3>상환 방식</h3></div>
+          <div class="method-grid">
+            <label class="method-card"><input type="radio" name="method" value="annuity" checked><span>원리금균등분할상환</span></label>
+            <label class="method-card"><input type="radio" name="method" value="equalPrincipal"><span>원금균등분할상환</span></label>
+            <label class="method-card"><input type="radio" name="method" value="bullet"><span>만기일시상환</span></label>
+            <label class="method-card"><input type="radio" name="method" value="partial"><span>일부만기상환<br>일부균등</span></label>
+          </div>
+
+          <div id="partialRatioWrap" class="field hidden" style="margin-top:14px;">
+            <label for="partialRatio">만기상환 비율</label>
+            <div class="control-group">
+              <input id="partialRatio" class="control" type="number" min="0" max="100" step="1" value="30" />
+              <div class="suffix">%</div>
+            </div>
+            <div class="hint">나머지 금액은 원리금균등 방식으로 분할 상환합니다.</div>
+          </div>
+        </section>
+
+        <button type="button" id="calculateBtn" class="primary-btn">상환 계획 계산하기</button>
+        <div class="notice">
+          본 계산기는 상담·시뮬레이션용입니다. 실제 대출 이자는 일수계산, 약정일, 휴일, 원단위 처리, 금리변동, 상품별 수수료 규정 등에 따라 달라질 수 있으므로 최종 금액은 해당 금고의 약정·전산 결과를 기준으로 확인해야 합니다.
+        </div>
+      </aside>
+
+      <section class="panel results">
+        <div id="resultEmpty" class="empty-state">
+          <strong>대출 조건을 입력해 주세요</strong>
+          왼쪽에서 조건을 설정한 뒤 상환 계획을 계산하면 요약과 월별 스케줄이 표시됩니다.
+        </div>
+
+        <div id="resultContent" class="hidden">
+          <div class="summary-grid">
+            <div class="summary-card accent">
+              <div class="kicker">1회차 상환액</div>
+              <div id="firstPayment" class="value">0원</div>
+              <div id="firstPaymentSub" class="sub">원금 + 이자</div>
+            </div>
+            <div class="summary-card">
+              <div class="kicker">총 이자 합계</div>
+              <div id="totalInterest" class="value">0원</div>
+              <div class="sub">입력 금리 고정 가정</div>
+            </div>
+            <div class="summary-card">
+              <div class="kicker">총 상환액</div>
+              <div id="totalPayment" class="value">0원</div>
+              <div class="sub">원금 + 이자</div>
+            </div>
+            <div class="summary-card">
+              <div class="kicker">월평균 상환액</div>
+              <div id="avgPayment" class="value">0원</div>
+              <div class="sub">전체 회차 단순 평균</div>
+            </div>
+          </div>
+
+          <div class="rate-strip">
+            <div class="rate-item"><span>기준금리</span><b id="rateBaseView">-</b></div>
+            <div class="rate-item"><span>가산금리</span><b id="rateSpreadView">-</b></div>
+            <div class="rate-item"><span>적용금리</span><b id="rateAppliedView">-</b></div>
+            <div class="rate-item"><span>금리주기</span><b id="rateCycleView">-</b></div>
+            <div class="rate-item"><span>금리종류</span><b id="rateTypeView">-</b></div>
+          </div>
+
+
+
+          <section class="visual-stats" aria-label="대출 상환 통계">
+            <div class="visual-stats-head">
+              <h3>상환 구성 한눈에 보기</h3>
+              <span>현재 계산 결과 기준</span>
+            </div>
+            <div class="visual-stats-grid">
+              <div class="donut-wrap">
+                <div id="repaymentDonut" class="donut-chart" role="img" aria-label="대출 원금과 총 이자의 비중">
+                  <div class="donut-center">
+                    <b id="donutTotal">0원</b>
+                    <span>총 상환액</span>
+                  </div>
+                </div>
+              </div>
+              <div class="stat-lines">
+                <div class="stat-line">
+                  <span class="stat-dot principal"></span>
+                  <span class="stat-label">대출 원금 비중</span>
+                  <strong id="principalShare" class="stat-value">0.0%</strong>
+                </div>
+                <div class="stat-line">
+                  <span class="stat-dot interest"></span>
+                  <span class="stat-label">총 대출이자 비중</span>
+                  <strong id="interestShare" class="stat-value interest">0.0%</strong>
+                </div>
+                <div class="stat-line avg">
+                  <span class="stat-label">월 평균 상환액</span>
+                  <strong id="visualAvgPayment" class="stat-value">0원</strong>
+                </div>
+              </div>
+              <div class="visual-bars">
+                <div class="visual-mini-card">
+                  <span>총 원금</span>
+                  <b id="visualPrincipal">0원</b>
+                  <div class="mini-track"><i id="principalBar"></i></div>
+                </div>
+                <div class="visual-mini-card">
+                  <span>총 이자</span>
+                  <b id="visualInterest">0원</b>
+                  <div class="mini-track interest"><i id="interestBar"></i></div>
+                </div>
+                <div class="visual-mini-card">
+                  <span>최대 월 납입금</span>
+                  <b id="visualMaxPayment">0원</b>
+                  <div class="mini-track"><i id="maxPaymentBar"></i></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div class="prepay-box">
+            <div class="prepay-head">
+              <h3>중도상환 시뮬레이션</h3>
+              <span class="hint">선택 회차 납입 직후 상환 기준</span>
+            </div>
+            <div class="prepay-grid">
+              <div class="field">
+                <label for="prepayAmount">중도상환 금액</label>
+                <div class="control-group">
+                  <input id="prepayAmount" class="control" type="number" min="0" step="1" value="500" />
+                  <div class="suffix">만원</div>
+                </div>
+              </div>
+              <div class="field">
+                <label for="prepayMonth">중도상환 회차</label>
+                <div class="control-group">
+                  <input id="prepayMonth" class="control" type="number" min="1" step="1" value="12" />
+                  <div class="suffix">회</div>
+                </div>
+              </div>
+              <div class="field">
+                <label for="prepayFeeRate">수수료율</label>
+                <div class="control-group">
+                  <input id="prepayFeeRate" class="control" type="number" min="0" max="10" step="0.01" value="0.60" />
+                  <div class="suffix">%</div>
+                </div>
+              </div>
+              <div class="field">
+                <label for="feePeriod">수수료 적용기간</label>
+                <div class="control-group">
+                  <input id="feePeriod" class="control" type="number" min="0" max="360" step="1" value="36" />
+                  <div class="suffix">개월</div>
+                </div>
+              </div>
+              <button type="button" id="prepayBtn" class="secondary-btn">재산출</button>
+            </div>
+            <div class="hint" style="margin-top:9px;">예시 수수료 산식: 중도상환금 × 수수료율 × 잔여 수수료 적용기간 ÷ 전체 수수료 적용기간. 실제 상품의 면제조건·일수계산 방식은 약정 기준으로 조정하세요.</div>
+
+            <div id="feeResult" class="fee-result">
+              <div class="fee-mini"><span>적용 수수료율</span><b id="effectiveFeeRate">-</b></div>
+              <div class="fee-mini"><span>중도상환수수료</span><b id="prepayFee">-</b></div>
+              <div class="fee-mini"><span>상환 후 잔액</span><b id="balanceAfterPrepay">-</b></div>
+              <div class="fee-mini"><span>재산출 총 이자</span><b id="recalcInterest">-</b></div>
+            </div>
+          </div>
+
+          <div class="table-toolbar">
+            <div>
+              <h3>월별 상환 스케줄</h3>
+              <div id="tableMeta" class="meta"></div>
+            </div>
+            <button type="button" id="resetScheduleBtn" class="small-btn hidden">기본 스케줄 보기</button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>회차</th>
+                  <th>원금</th>
+                  <th>이자</th>
+                  <th>월 납입금</th>
+                  <th>대출 잔액</th>
+                </tr>
+              </thead>
+              <tbody id="scheduleBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <footer>MG 맞춤형 대출 상환 계산기 · 월 이자율 = 연 적용금리 ÷ 12 방식의 상담용 시뮬레이션</footer>
+  </main>
+
+  <script>
+    (() => {
+      const $ = (id) => document.getElementById(id);
+      const won = new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW', maximumFractionDigits: 0 });
+      const number = new Intl.NumberFormat('ko-KR');
+
+      let baseSchedule = [];
+      let activeSchedule = [];
+      let lastParams = null;
+      let prepayState = null;
+
+      const methodNames = {
+        annuity: '원리금균등분할상환',
+        equalPrincipal: '원금균등분할상환',
+        bullet: '만기일시상환',
+        partial: '일부만기상환일부균등'
+      };
+
+      function getMethod() {
+        return document.querySelector('input[name="method"]:checked').value;
+      }
+
+      function getTermUnit() {
+        return document.querySelector('input[name="termUnit"]:checked').value;
+      }
+
+      function toMonths() {
+        const value = Number($('term').value || 0);
+        return getTermUnit() === 'year' ? Math.round(value * 12) : Math.round(value);
+      }
+
+      function roundWon(value) {
+        return Math.max(0, Math.round(value));
+      }
+
+      function annuityPayment(principal, monthlyRate, months) {
+        if (months <= 0) return principal;
+        if (monthlyRate === 0) return principal / months;
+        return principal * monthlyRate / (1 - Math.pow(1 + monthlyRate, -months));
+      }
+
+      function buildSchedule({ principal, annualRate, termMonths, graceMonths, method, partialRatio = 0, startRound = 1 }) {
+        principal = roundWon(principal);
+        const r = annualRate / 100 / 12;
+        const rows = [];
+        let balance = principal;
+        const grace = Math.min(Math.max(0, graceMonths), Math.max(0, termMonths - 1));
+        const repayMonths = Math.max(1, termMonths - grace);
+
+        const maturityPrincipal = method === 'partial' ? roundWon(principal * (partialRatio / 100)) : 0;
+        const amortPrincipal = method === 'partial' ? principal - maturityPrincipal : principal;
+        const annuityPmt = (method === 'annuity' || method === 'partial')
+          ? annuityPayment(amortPrincipal, r, repayMonths)
+          : 0;
+        const equalPrincipal = method === 'equalPrincipal' ? principal / repayMonths : 0;
+
+        let amortBalance = amortPrincipal;
+
+        for (let i = 1; i <= termMonths; i++) {
+          const interest = roundWon(balance * r);
+          let principalPay = 0;
+
+          if (i <= grace) {
+            principalPay = 0;
+          } else {
+            const repayIndex = i - grace;
+            const isLast = i === termMonths;
+
+            if (method === 'annuity') {
+              principalPay = isLast ? balance : roundWon(annuityPmt - interest);
+              principalPay = Math.min(balance, Math.max(0, principalPay));
+            } else if (method === 'equalPrincipal') {
+              principalPay = isLast ? balance : roundWon(equalPrincipal);
+              principalPay = Math.min(balance, principalPay);
+            } else if (method === 'bullet') {
+              principalPay = isLast ? balance : 0;
+            } else if (method === 'partial') {
+              const maturityInterest = roundWon(maturityPrincipal * r);
+              const amortInterest = roundWon(amortBalance * r);
+              const targetPrincipal = roundWon(annuityPmt - amortInterest);
+              let amortPay = isLast ? amortBalance : Math.min(amortBalance, Math.max(0, targetPrincipal));
+              principalPay = amortPay + (isLast ? maturityPrincipal : 0);
+              principalPay = Math.min(balance, principalPay);
+              amortBalance = Math.max(0, amortBalance - amortPay);
+            }
+          }
+
+          balance = Math.max(0, balance - principalPay);
+          const payment = principalPay + interest;
+          rows.push({
+            round: startRound + i - 1,
+            principal: principalPay,
+            interest,
+            payment,
+            balance,
+            grace: i <= grace,
+            prepayReflected: false
+          });
+        }
+
+        if (rows.length && rows[rows.length - 1].balance !== 0) {
+          const last = rows[rows.length - 1];
+          last.principal += last.balance;
+          last.payment += last.balance;
+          last.balance = 0;
+        }
+
+        return rows;
+      }
+
+      function getParams() {
+        const amountMan = Number($('amount').value || 0);
+        const termMonths = toMonths();
+        const graceMonths = Math.round(Number($('grace').value || 0));
+        const annualRate = Number($('appliedRate').value || 0);
+        const method = getMethod();
+        const partialRatio = Number($('partialRatio').value || 0);
+
+        return {
+          principal: amountMan * 10000,
+          amountMan,
+          termMonths,
+          graceMonths,
+          annualRate,
+          method,
+          partialRatio,
+          baseRate: Number($('baseRate').value || 0),
+          spreadRate: Number($('spreadRate').value || 0),
+          rateCycle: $('rateCycle').value,
+          rateType: $('rateType').value
+        };
+      }
+
+      function validate(p) {
+        const errors = [];
+        if (!Number.isFinite(p.principal) || p.principal <= 0) errors.push('대출 금액을 1만원 이상 입력해 주세요.');
+        if (!Number.isFinite(p.termMonths) || p.termMonths < 1 || p.termMonths > 3600) errors.push('대출 기간을 올바르게 입력해 주세요.');
+        if (p.graceMonths < 0 || p.graceMonths >= p.termMonths) errors.push('거치 기간은 전체 대출 기간보다 짧아야 합니다.');
+        if (p.annualRate < 0 || p.annualRate > 50) errors.push('적용금리를 0~50% 범위에서 입력해 주세요.');
+        if (p.method === 'partial' && (p.partialRatio < 0 || p.partialRatio > 100)) errors.push('만기상환 비율은 0~100% 범위여야 합니다.');
+        return errors;
+      }
+
+      function showError(messages) {
+        const box = $('errorBox');
+        if (!messages.length) {
+          box.classList.remove('show');
+          box.textContent = '';
+          return;
+        }
+        box.textContent = messages.join(' ');
+        box.classList.add('show');
+      }
+
+      function sum(rows, key) {
+        return rows.reduce((acc, row) => acc + row[key], 0);
+      }
+
+      function renderSummary(rows, params, isRecalc = false) {
+        const totalInterest = sum(rows, 'interest');
+        const totalPayment = sum(rows, 'payment');
+        const first = rows[0] || { payment: 0, principal: 0, interest: 0 };
+
+        $('firstPayment').textContent = won.format(first.payment);
+        $('firstPaymentSub').textContent = `${won.format(first.principal)} 원금 + ${won.format(first.interest)} 이자`;
+        $('totalInterest').textContent = won.format(totalInterest);
+        $('totalPayment').textContent = won.format(totalPayment + (prepayState && isRecalc ? prepayState.amount : 0));
+        $('avgPayment').textContent = won.format(rows.length ? totalPayment / rows.length : 0);
+
+        $('rateBaseView').textContent = `${params.baseRate.toFixed(2)}%`;
+        $('rateSpreadView').textContent = `${params.spreadRate.toFixed(2)}%`;
+        $('rateAppliedView').textContent = `${params.annualRate.toFixed(2)}%`;
+        $('rateCycleView').textContent = params.rateCycle;
+        $('rateTypeView').textContent = params.rateType;
+      }
+
+
+
+      function renderVisualStats(rows, params, isRecalc = false) {
+        const totalInterest = sum(rows, 'interest');
+        const principalBase = isRecalc && prepayState ? params.principal : sum(rows, 'principal');
+        const totalRepayment = principalBase + totalInterest;
+        const principalShare = totalRepayment > 0 ? principalBase / totalRepayment * 100 : 0;
+        const interestShare = totalRepayment > 0 ? totalInterest / totalRepayment * 100 : 0;
+        const avg = rows.length ? sum(rows, 'payment') / rows.length : 0;
+        const maxPayment = rows.length ? Math.max(...rows.map(row => row.payment)) : 0;
+        const maxScale = Math.max(principalBase, totalInterest, maxPayment, 1);
+
+        $('repaymentDonut').style.setProperty('--principal-angle', `${principalShare * 3.6}deg`);
+        $('repaymentDonut').setAttribute('aria-label', `대출 원금 ${principalShare.toFixed(1)}%, 총 이자 ${interestShare.toFixed(1)}%`);
+        const donutText = won.format(totalRepayment);
+        const donutEl = $('donutTotal');
+        donutEl.textContent = donutText;
+        donutEl.title = donutText;
+        const digits = donutText.replace(/[^0-9]/g, '').length;
+        let donutFont = '1.05rem';
+        if (digits >= 13) donutFont = '.66rem';
+        else if (digits >= 11) donutFont = '.74rem';
+        else if (digits >= 9) donutFont = '.84rem';
+        else if (digits >= 7) donutFont = '.95rem';
+        $('repaymentDonut').style.setProperty('--donut-font', donutFont);
+        $('principalShare').textContent = `${principalShare.toFixed(1)}%`;
+        $('interestShare').textContent = `${interestShare.toFixed(1)}%`;
+        $('visualAvgPayment').textContent = won.format(avg);
+        $('visualPrincipal').textContent = won.format(principalBase);
+        $('visualInterest').textContent = won.format(totalInterest);
+        $('visualMaxPayment').textContent = won.format(maxPayment);
+        $('principalBar').style.width = `${Math.min(100, principalBase / maxScale * 100)}%`;
+        $('interestBar').style.width = `${Math.min(100, totalInterest / maxScale * 100)}%`;
+        $('maxPaymentBar').style.width = `${Math.min(100, maxPayment / maxScale * 100)}%`;
+      }
+
+      function renderTable(rows, params, prepayMonth = null) {
+        const tbody = $('scheduleBody');
+        tbody.innerHTML = rows.map(row => {
+          const marker = prepayMonth && row.round === prepayMonth + 1;
+          return `
+            <tr class="${marker ? 'prepay-marker' : ''}">
+              <td>${number.format(row.round)}회${marker ? '<span class="tag">중도상환 반영</span>' : ''}</td>
+              <td>${won.format(row.principal)}</td>
+              <td>${won.format(row.interest)}</td>
+              <td>${won.format(row.payment)}</td>
+              <td class="balance">${won.format(row.balance)}</td>
+            </tr>`;
+        }).join('');
+
+        const suffix = prepayMonth ? ` · ${prepayMonth}회차 납입 직후 중도상환 반영` : '';
+        $('tableMeta').textContent = `${methodNames[params.method]} · ${params.termMonths}개월 · 연 ${params.annualRate.toFixed(2)}%${suffix}`;
+      }
+
+      function calculate() {
+        const p = getParams();
+        const errors = validate(p);
+        showError(errors);
+        if (errors.length) return;
+
+        lastParams = p;
+        prepayState = null;
+        baseSchedule = buildSchedule(p);
+        activeSchedule = baseSchedule.slice();
+
+        $('resultEmpty').classList.add('hidden');
+        $('resultContent').classList.remove('hidden');
+        $('feeResult').classList.remove('show');
+        $('resetScheduleBtn').classList.add('hidden');
+
+        $('prepayMonth').max = String(Math.max(1, p.termMonths - 1));
+        if (Number($('prepayMonth').value) >= p.termMonths) $('prepayMonth').value = String(Math.max(1, Math.floor(p.termMonths / 2)));
+
+        renderSummary(baseSchedule, p, false);
+        renderVisualStats(baseSchedule, p, false);
+        renderTable(baseSchedule, p);
+      }
+
+      function recalcWithPrepayment() {
+        if (!lastParams || !baseSchedule.length) {
+          calculate();
+          if (!lastParams) return;
+        }
+
+        const month = Math.round(Number($('prepayMonth').value || 0));
+        const requested = Number($('prepayAmount').value || 0) * 10000;
+        const feeRate = Number($('prepayFeeRate').value || 0);
+        const feePeriod = Math.round(Number($('feePeriod').value || 0));
+
+        const errors = [];
+        if (month < 1 || month >= lastParams.termMonths) errors.push(`중도상환 회차는 1~${Math.max(1, lastParams.termMonths - 1)}회 사이로 입력해 주세요.`);
+        if (requested <= 0) errors.push('중도상환 금액을 입력해 주세요.');
+        if (feeRate < 0 || feeRate > 10) errors.push('중도상환수수료율을 확인해 주세요.');
+        if (feePeriod < 0) errors.push('수수료 적용기간을 확인해 주세요.');
+        showError(errors);
+        if (errors.length) return;
+
+        const balanceAtMonth = baseSchedule[month - 1].balance;
+        const prepayAmount = Math.min(requested, balanceAtMonth);
+        const remainingFeeMonths = Math.max(0, feePeriod - month);
+        const feeFactor = feePeriod > 0 ? remainingFeeMonths / feePeriod : 0;
+        const effectiveRate = feeRate * feeFactor;
+        const fee = roundWon(prepayAmount * feeRate / 100 * feeFactor);
+        const newBalance = Math.max(0, balanceAtMonth - prepayAmount);
+
+        const beforeRows = baseSchedule.slice(0, month);
+        const remainingTerm = lastParams.termMonths - month;
+        const remainingGrace = Math.max(0, lastParams.graceMonths - month);
+        let afterRows = [];
+
+        if (newBalance > 0 && remainingTerm > 0) {
+          afterRows = buildSchedule({
+            principal: newBalance,
+            annualRate: lastParams.annualRate,
+            termMonths: remainingTerm,
+            graceMonths: remainingGrace,
+            method: lastParams.method,
+            partialRatio: lastParams.partialRatio,
+            startRound: month + 1
+          });
+          if (afterRows.length) afterRows[0].prepayReflected = true;
+        }
+
+        activeSchedule = beforeRows.concat(afterRows);
+        prepayState = { month, amount: prepayAmount, fee, effectiveRate, newBalance };
+
+        $('effectiveFeeRate').textContent = `${effectiveRate.toFixed(4)}%`;
+        $('prepayFee').textContent = won.format(fee);
+        $('balanceAfterPrepay').textContent = won.format(newBalance);
+        $('recalcInterest').textContent = won.format(sum(activeSchedule, 'interest'));
+        $('feeResult').classList.add('show');
+        $('resetScheduleBtn').classList.remove('hidden');
+
+        renderSummary(activeSchedule, lastParams, true);
+        renderVisualStats(activeSchedule, lastParams, true);
+        renderTable(activeSchedule, lastParams, month);
+      }
+
+      function resetSchedule() {
+        if (!lastParams) return;
+        prepayState = null;
+        activeSchedule = baseSchedule.slice();
+        $('feeResult').classList.remove('show');
+        $('resetScheduleBtn').classList.add('hidden');
+        renderSummary(baseSchedule, lastParams, false);
+        renderVisualStats(baseSchedule, lastParams, false);
+        renderTable(baseSchedule, lastParams);
+      }
+
+      document.querySelectorAll('.quick-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          $('amount').value = btn.dataset.amount;
+          $('amountRange').value = Math.min(Number(btn.dataset.amount), Number($('amountRange').max));
+        });
+      });
+
+      $('amountRange').addEventListener('input', e => $('amount').value = e.target.value);
+      $('amount').addEventListener('input', e => {
+        const v = Number(e.target.value || 0);
+        if (v >= Number($('amountRange').min) && v <= Number($('amountRange').max)) $('amountRange').value = v;
+      });
+
+      function syncTermFromRange() {
+        const months = Number($('termRange').value);
+        if (getTermUnit() === 'year') $('term').value = Math.max(1, Math.round(months / 12));
+        else $('term').value = months;
+      }
+      $('termRange').addEventListener('input', syncTermFromRange);
+      $('term').addEventListener('input', () => {
+        const months = toMonths();
+        if (months >= 1 && months <= 360) $('termRange').value = months;
+      });
+      document.querySelectorAll('input[name="termUnit"]').forEach(el => el.addEventListener('change', () => {
+        const currentMonths = Number($('termRange').value);
+        if (getTermUnit() === 'year') $('term').value = Math.max(1, Math.round(currentMonths / 12));
+        else $('term').value = currentMonths;
+      }));
+
+      document.querySelectorAll('input[name="method"]').forEach(el => el.addEventListener('change', () => {
+        $('partialRatioWrap').classList.toggle('hidden', getMethod() !== 'partial');
+      }));
+
+      $('applyRateSum').addEventListener('click', () => {
+        const v = Number($('baseRate').value || 0) + Number($('spreadRate').value || 0);
+        $('appliedRate').value = v.toFixed(2);
+      });
+
+      $('rateType').addEventListener('change', () => {
+        if ($('rateType').value === '고정금리') $('rateCycle').value = '고정';
+        else if ($('rateCycle').value === '고정') $('rateCycle').value = '6개월';
+      });
+
+      $('calculateBtn').addEventListener('click', calculate);
+      $('prepayBtn').addEventListener('click', recalcWithPrepayment);
+      $('resetScheduleBtn').addEventListener('click', resetSchedule);
+
+      calculate();
+    })();
+  </script>
+</body>
+</html>
